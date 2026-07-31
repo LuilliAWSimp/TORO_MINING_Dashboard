@@ -1,0 +1,16 @@
+HOTFIX TYPESCRIPT - TORO MINING
+
+1. Cierre el dashboard si esta abierto.
+2. Extraiga este ZIP dentro de la carpeta TORO_MINING_Dashboard_San_Bernardo.
+3. Cuando Windows pregunte, seleccione Reemplazar los archivos en el destino.
+4. Abra PowerShell en la carpeta del proyecto y ejecute:
+
+   cd frontend
+   npm run typecheck
+   npm run build
+   cd ..
+
+5. Si ambos comandos terminan sin errores, abra Iniciar_Dashboard.bat.
+
+No es necesario ejecutar npm install otra vez porque las dependencias ya fueron instaladas.
+No ejecute npm audit fix --force.
