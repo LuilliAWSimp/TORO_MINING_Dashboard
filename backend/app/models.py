@@ -85,6 +85,12 @@ class KpiDefinition(BaseModel):
     yellow_limit: float
     red_limit: float
     evaluation_direction: EvaluationDirection
+    optimal_min: float | None = None
+    optimal_max: float | None = None
+    warning_min: float | None = None
+    warning_max: float | None = None
+    critical_min: float | None = None
+    critical_max: float | None = None
     source: str
     frequency: str | None = None
     responsible: str | None = None

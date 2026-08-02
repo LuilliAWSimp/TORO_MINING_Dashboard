@@ -1,4 +1,4 @@
-import { AlertTriangle, BellRing, Clock3, RadioTower } from 'lucide-react'
+import { BellRing, OctagonAlert, TriangleAlert, WifiOff } from 'lucide-react'
 import { useDashboard } from '../components/DashboardContext'
 import { KpiCard } from '../components/KpiCard'
 import { SectionHeader } from '../components/SectionHeader'
@@ -17,9 +17,9 @@ export function AlarmsPage() {
       <SectionHeader title="Alarmas" subtitle="Eventos activos de la simulación local. No existe reconocimiento ni escritura a PLC/SCADA." actions={<StatusBadge type="demo" />} />
       <div className="kpi-grid four-columns">
         <KpiCard label="Alarmas activas" value={String(snapshot.alarms.length)} icon={BellRing} tone="critical" detail="Eventos demo" />
-        <KpiCard label="Críticas" value={String(criticalCount)} icon={AlertTriangle} tone="critical" detail="Atención prioritaria" />
-        <KpiCard label="Advertencias" value={String(warningCount)} icon={Clock3} tone="warning" detail="Condición preventiva" />
-        <KpiCard label="Sin comunicación" value={String(offlineCount)} icon={RadioTower} tone="info" detail="Pérdida simulada" />
+        <KpiCard label="Críticas" value={String(criticalCount)} icon={OctagonAlert} tone="critical" detail="Atención prioritaria" />
+        <KpiCard label="Precauciones" value={String(warningCount)} icon={TriangleAlert} tone="warning" detail="Condición preventiva" />
+        <KpiCard label="Sin comunicación" value={String(offlineCount)} icon={WifiOff} tone="info" detail="Pérdida simulada" />
       </div>
       <section className="panel alarms-panel">
         <div className="panel-heading"><div><h3>Eventos relevantes</h3><p>Selecciona una fila para abrir el detalle del equipo.</p></div></div>

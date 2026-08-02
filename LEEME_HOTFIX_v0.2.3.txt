@@ -1,0 +1,20 @@
+HOTFIX TORO MINING Dashboard v0.2.3
+
+Corrige el error de TypeScript:
+"lucide-react has no exported member named CircleInfo"
+
+Causa:
+La version instalada de lucide-react expone el icono circular de informacion con el nombre Info, no CircleInfo.
+
+Aplicacion:
+1. Cierra el dashboard y el servidor de desarrollo.
+2. Copia las carpetas frontend de este ZIP sobre la raiz del proyecto.
+3. Acepta reemplazar los archivos.
+4. Ejecuta:
+
+   cd frontend
+   npm run typecheck
+   npm run build
+   npm run test:focused
+
+No es necesario reinstalar dependencias ni eliminar node_modules.

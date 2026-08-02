@@ -13,11 +13,14 @@ El sistema incluye dos escenarios globales, resueltos por el backend mediante `D
 
 La selección se realiza en la franja `DATOS DEMO`, se guarda en `localStorage` con la clave `toro-mining-demo-scenario` y es independiente del tema visual, almacenado en `toro-mining-theme`.
 
+La ruta `Resumen` permite personalizar únicamente su presentación con la clave independiente `toro-mining-summary-layout-v1`. Se pueden mostrar, ocultar y reordenar bloques completos mediante controles Subir/Bajar. La sección de estado y alarmas relevantes permanece siempre visible, y la opción **Restaurar diseño predeterminado** elimina ocultamientos y recupera el orden original.
+
 El cambio de escenario actualiza de forma conjunta el snapshot y el catálogo. Mientras se consulta el nuevo escenario se oculta el contenido anterior para evitar mezclar información.
 
 ## Funcionalidad incluida
 
-- Resumen operativo original con flujo conceptual interactivo, KPIs y tendencias.
+- Resumen operativo con flujo conceptual interactivo, KPIs, tendencias y personalización persistente de secciones.
+- Etiquetas operativas visibles para RAG: `En objetivo`, `Precaución`, `Alerta` y `Crítico`, sin modificar los códigos internos.
 - Nueva vista `Ejecutivo` adaptada al sistema visual de TORO MINING.
 - Estado general RAG calculado.
 - Siete KPIs estratégicos con detalle de fuente, meta, umbrales y frecuencia.
@@ -51,30 +54,43 @@ Las fuentes son metadatos demo. No representan conexiones activas.
 
 ## Reglas RAG
 
+Los códigos internos y los contratos de API permanecen sin cambios:
+
+```text
+green, yellow, red, critical
+```
+
+Su representación visible en la interfaz y el PDF es:
+
+- `green`: **En objetivo**.
+- `yellow`: **Precaución**.
+- `red`: **Alerta**.
+- `critical`: **Crítico**.
+
 Para `higher_is_better`:
 
-- Verde: valor mayor o igual a la meta.
-- Amarillo: entre límite amarillo y meta.
-- Rojo: entre límite rojo y límite amarillo.
+- En objetivo: valor mayor o igual a la meta.
+- Precaución: entre límite amarillo y meta.
+- Alerta: entre límite rojo y límite amarillo.
 - Crítico: inferior al límite rojo.
 
 Para `lower_is_better`:
 
-- Verde: valor menor o igual a la meta.
-- Amarillo: entre meta y límite amarillo.
-- Rojo: entre límite amarillo y límite rojo.
+- En objetivo: valor menor o igual a la meta.
+- Precaución: entre meta y límite amarillo.
+- Alerta: entre límite amarillo y límite rojo.
 - Crítico: superior al límite rojo.
 
-La dirección se infiere inicialmente desde el orden de meta y umbrales, se guarda explícitamente en el catálogo y se prueba para ambos sentidos.
+La dirección se infiere inicialmente desde el orden de meta y umbrales, se guarda explícitamente en el catálogo y se prueba para ambos sentidos. Estados técnicos como `Operando`, `Detenido`, `Advertencia`, `Alarma` y `Sin comunicación` conservan su significado y se muestran con texto, icono y color semántico.
 
 ## Arquitectura
 
 ```text
 frontend/src/
-  components/       presentación reutilizable y selector de escenario
+  components/       presentación reutilizable, selector de escenario y personalizador del Resumen
   pages/            módulos navegables, incluida la vista Ejecutiva
   services/         cliente de API con parámetro scenario
-  hooks/            actualización atómica y tema
+  hooks/            actualización atómica, tema y preferencias del Resumen
   types/            contratos TypeScript
   styles/           tokens y CSS propio
 
@@ -131,6 +147,7 @@ Validación manual:
 cd frontend
 npm run typecheck
 npm run build
+npm run test:focused
 cd ..
 .\.venv\Scripts\python.exe -m compileall backend run_dashboard.py
 .\.venv\Scripts\python.exe -m pytest -q backend\tests
@@ -161,7 +178,7 @@ ESCENARIO DEMO · ARRANQUE 400 t/d
 ESCENARIO DEMO · OBJETIVO 1,000 t/d · MES 36
 ```
 
-Incluye los siete KPIs estratégicos y su RAG, además de indicadores operativos, tendencias, equipos y alarmas del mismo escenario solicitado.
+Incluye los siete KPIs estratégicos y su RAG con etiquetas operativas (`En objetivo`, `Precaución`, `Alerta`, `Crítico`), además de indicadores operativos, tendencias, equipos y alarmas del mismo escenario solicitado. La personalización del Resumen no modifica el PDF.
 
 Filtros disponibles:
 

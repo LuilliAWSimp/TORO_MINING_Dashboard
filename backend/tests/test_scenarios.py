@@ -94,3 +94,69 @@ def test_kpi_metadata_uses_only_supported_definitions() -> None:
     assert kpis['KPI-002']['responsible'] is None
     assert kpis['KPI-009']['evaluation_direction'] == 'lower_is_better'
     assert kpis['KPI-021']['evaluation_direction'] == 'higher_is_better'
+
+
+def test_rag_visible_labels_are_operational_without_changing_codes() -> None:
+    from backend.app.services.report_service import rag_display_label
+
+    assert RagStatus.GREEN.value == "green"
+    assert RagStatus.YELLOW.value == "yellow"
+    assert RagStatus.RED.value == "red"
+    assert RagStatus.CRITICAL.value == "critical"
+    assert rag_display_label(RagStatus.GREEN) == "En objetivo"
+    assert rag_display_label(RagStatus.YELLOW) == "Precaución"
+    assert rag_display_label(RagStatus.RED) == "Alerta"
+    assert rag_display_label(RagStatus.CRITICAL) == "Crítico"
+
+
+def test_kpi_model_is_ready_for_documented_optimal_ranges_without_inventing_values() -> None:
+    response = client.get('/api/v1/catalog?scenario=startup')
+    assert response.status_code == 200
+    for kpi in response.json()['kpis']:
+        assert kpi['optimal_min'] is None
+        assert kpi['optimal_max'] is None
+        assert kpi['warning_min'] is None
+        assert kpi['warning_max'] is None
+        assert kpi['critical_min'] is None
+        assert kpi['critical_max'] is None
+
+
+def test_demo_equipment_status_codes_remain_stable_with_operational_labels() -> None:
+    response = client.get('/api/v1/dashboard/snapshot?scenario=target&window_hours=12')
+    assert response.status_code == 200
+    equipment = response.json()['equipment']
+    labels_by_status = {item['status']: item['status_label'] for item in equipment}
+    assert labels_by_status['running'] == 'Operando'
+    assert labels_by_status['stopped'] == 'Detenido'
+    assert labels_by_status['warning'] == 'Precaución'
+    assert labels_by_status['alarm'] == 'Alerta'
+    assert set(labels_by_status).issubset({'running', 'stopped', 'warning', 'alarm', 'offline'})
+
+
+def test_pdf_status_icons_can_be_built_for_all_supported_states() -> None:
+    from backend.app.services.report_service import (
+        ALERT,
+        CRITICAL,
+        GOOD,
+        OFFLINE,
+        WARNING,
+        _status_icon,
+    )
+
+    for kind, color in (
+        ('green', GOOD),
+        ('yellow', WARNING),
+        ('red', ALERT),
+        ('critical', CRITICAL),
+        ('running', GOOD),
+        ('stopped', OFFLINE),
+        ('warning', WARNING),
+        ('alarm', ALERT),
+        ('offline', OFFLINE),
+        ('info', OFFLINE),
+        ('demo', WARNING),
+    ):
+        icon = _status_icon(kind, color)
+        assert icon.width == 11
+        assert icon.height == 11
+        assert len(icon.contents) > 0

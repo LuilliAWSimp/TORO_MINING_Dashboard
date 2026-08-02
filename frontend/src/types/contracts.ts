@@ -50,6 +50,12 @@ export interface KpiDefinition {
   yellow_limit: number
   red_limit: number
   evaluation_direction: EvaluationDirection
+  optimal_min: number | null
+  optimal_max: number | null
+  warning_min: number | null
+  warning_max: number | null
+  critical_min: number | null
+  critical_max: number | null
   source: string
   frequency: string | null
   responsible: string | null

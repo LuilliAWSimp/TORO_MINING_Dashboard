@@ -1,10 +1,22 @@
-import { Database, Info, X } from 'lucide-react'
-import type { KpiDefinition } from '../types/contracts'
-import { formatDateTime, formatKpiValue } from '../utils/format'
+import { Database, Info, LineChart, X } from 'lucide-react'
+import type { ExecutiveTrendPoint, KpiDefinition } from '../types/contracts'
+import { formatDateTime, formatKpiValue, formatShortDate } from '../utils/format'
+import { getKpiTrendSeries } from '../utils/kpiTrend'
 import { StatusBadge } from './StatusBadge'
+import { TimeSeriesChart } from './TimeSeriesChart'
 
-export function KpiDetailPanel({ kpi, onClose }: { kpi: KpiDefinition | null; onClose: () => void }) {
+export function KpiDetailPanel({
+  kpi,
+  trends,
+  onClose,
+}: {
+  kpi: KpiDefinition | null
+  trends: ExecutiveTrendPoint[]
+  onClose: () => void
+}) {
   if (!kpi) return null
+  const trendSeries = getKpiTrendSeries(kpi)
+
   return (
     <div className="kpi-detail-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <aside className="kpi-detail-panel" aria-label={`Detalle de ${kpi.name}`}>
@@ -27,6 +39,19 @@ export function KpiDetailPanel({ kpi, onClose }: { kpi: KpiDefinition | null; on
           <div><span>Límite rojo</span><strong>{formatKpiValue(kpi.red_limit, kpi.unit)}</strong></div>
           <div><span>Evaluación</span><strong>{kpi.evaluation_direction === 'higher_is_better' ? 'Mayor es mejor' : 'Menor es mejor'}</strong></div>
         </div>
+        {trendSeries && trends.length > 0 && (
+          <section className="kpi-detail-section kpi-detail-chart-section">
+            <h3><LineChart size={16} /> Comportamiento reciente</h3>
+            <p>Serie demo de 12 semanas para el indicador seleccionado.</p>
+            <TimeSeriesChart
+              data={trends}
+              xKey="week"
+              xFormatter={formatShortDate}
+              series={[trendSeries]}
+              height={220}
+            />
+          </section>
+        )}
         <section className="kpi-detail-section">
           <h3><Info size={16} /> Definición</h3>
           <p>{kpi.definition ?? 'Pendiente de definición'}</p>

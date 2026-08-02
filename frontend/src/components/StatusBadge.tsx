@@ -1,55 +1,38 @@
 import {
-  AlertCircle,
-  AlertTriangle,
-  CircleOff,
+  BellRing,
+  CircleCheck,
+  Info,
   CirclePause,
   CirclePlay,
-  Info,
-  Radio,
-  ShieldCheck,
+  Database,
+  OctagonAlert,
+  TriangleAlert,
+  WifiOff,
 } from 'lucide-react'
-import type { AlarmEvent, DataQuality, EquipmentStatus, RagStatus } from '../types/contracts'
-
-type BadgeType = EquipmentStatus | DataQuality | AlarmEvent['severity'] | RagStatus | 'connected' | 'demo'
-
-const labels: Record<BadgeType, string> = {
-  running: 'Operando',
-  stopped: 'Detenido',
-  warning: 'Advertencia',
-  alarm: 'Alarma',
-  critical: 'Crítico',
-  offline: 'Sin comunicación',
-  good: 'Normal',
-  info: 'Información',
-  connected: 'Conectado',
-  demo: 'Datos demo',
-  green: 'Verde',
-  yellow: 'Amarillo',
-  red: 'Rojo',
-}
+import { STATUS_LABELS, type BadgeType } from '../utils/statusPresentation'
 
 const icons = {
   running: CirclePlay,
   stopped: CirclePause,
-  warning: AlertTriangle,
-  alarm: AlertCircle,
-  critical: AlertCircle,
-  offline: CircleOff,
-  good: Radio,
+  warning: TriangleAlert,
+  alarm: BellRing,
+  critical: OctagonAlert,
+  offline: WifiOff,
+  good: CircleCheck,
   info: Info,
-  connected: Radio,
-  demo: Info,
-  green: ShieldCheck,
-  yellow: AlertTriangle,
-  red: AlertCircle,
+  connected: CircleCheck,
+  demo: Database,
+  green: CircleCheck,
+  yellow: TriangleAlert,
+  red: BellRing,
 } satisfies Record<BadgeType, typeof Info>
 
 export function StatusBadge({ type, label }: { type: BadgeType; label?: string }) {
   const Icon = icons[type]
   return (
-    <span className={`status-badge status-${type}`}>
+    <span className={`status-badge status-${type}`} data-status={type}>
       <Icon size={13} aria-hidden="true" />
-      <span>{label ?? labels[type]}</span>
+      <span>{label ?? STATUS_LABELS[type]}</span>
     </span>
   )
 }

@@ -28,6 +28,7 @@ from reportlab.platypus import (
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
+from reportlab.graphics.shapes import Circle, Drawing, Ellipse, Line, Path as GraphicsPath, Polygon, Rect
 
 from backend.app.catalog import AREA_BY_ID
 from backend.app.config import settings
@@ -44,10 +45,22 @@ GOLD_LIGHT = colors.HexColor("#E2D5A7")
 PAPER = colors.HexColor("#FFFFFF")
 PANEL = colors.HexColor("#F4F4F2")
 BORDER = colors.HexColor("#D7D7D4")
-GOOD = colors.HexColor("#2E7D5A")
-WARNING = colors.HexColor("#B7791F")
-CRITICAL = colors.HexColor("#B23A3A")
+GOOD = colors.HexColor("#15803D")
+WARNING = colors.HexColor("#A16207")
+ALERT = colors.HexColor("#C2410C")
+CRITICAL = colors.HexColor("#B91C1C")
 OFFLINE = colors.HexColor("#59697A")
+
+RAG_DISPLAY_LABELS = {
+    RagStatus.GREEN: "En objetivo",
+    RagStatus.YELLOW: "Precaución",
+    RagStatus.RED: "Alerta",
+    RagStatus.CRITICAL: "Crítico",
+}
+
+
+def rag_display_label(status: RagStatus) -> str:
+    return RAG_DISPLAY_LABELS[status]
 
 
 class NumberedCanvas(canvas.Canvas):
@@ -110,9 +123,84 @@ def _status_color(status: str):
         "running": GOOD,
         "stopped": LIGHT_GRAPHITE,
         "warning": WARNING,
-        "alarm": CRITICAL,
+        "alarm": ALERT,
         "offline": OFFLINE,
     }.get(status, LIGHT_GRAPHITE)
+
+
+def _status_icon(kind: str, color: colors.Color) -> Drawing:
+    drawing = Drawing(11, 11)
+    stroke = 1.25
+    if kind in {"green", "good", "running", "connected"}:
+        drawing.add(Circle(5.5, 5.5, 4.3, strokeColor=color, fillColor=None, strokeWidth=stroke))
+        drawing.add(Line(3.2, 5.5, 4.8, 3.9, strokeColor=color, strokeWidth=stroke))
+        drawing.add(Line(4.8, 3.9, 8.0, 7.2, strokeColor=color, strokeWidth=stroke))
+    elif kind in {"yellow", "warning"}:
+        drawing.add(Polygon([5.5, 10, 10, 1.2, 1, 1.2], strokeColor=color, fillColor=None, strokeWidth=stroke))
+        drawing.add(Line(5.5, 7.4, 5.5, 4.1, strokeColor=color, strokeWidth=stroke))
+        drawing.add(Circle(5.5, 2.7, 0.55, strokeColor=color, fillColor=color, strokeWidth=0))
+    elif kind in {"red", "alarm"}:
+        bell = GraphicsPath()
+        bell.moveTo(2.2, 3.2)
+        bell.lineTo(3.2, 4.4)
+        bell.lineTo(3.2, 7.0)
+        bell.curveTo(3.2, 9.6, 7.8, 9.6, 7.8, 7.0)
+        bell.lineTo(7.8, 4.4)
+        bell.lineTo(8.8, 3.2)
+        bell.closePath()
+        bell.strokeColor = color
+        bell.fillColor = None
+        bell.strokeWidth = stroke
+        drawing.add(bell)
+        drawing.add(Line(2.3, 3.2, 8.7, 3.2, strokeColor=color, strokeWidth=stroke))
+        drawing.add(Circle(5.5, 1.8, 0.7, strokeColor=color, fillColor=color, strokeWidth=0))
+    elif kind == "critical":
+        drawing.add(Polygon([3.0, 10, 8.0, 10, 10.5, 7.7, 10.5, 3.3, 8.0, 1, 3.0, 1, 0.5, 3.3, 0.5, 7.7], strokeColor=color, fillColor=None, strokeWidth=stroke))
+        drawing.add(Line(3.7, 7.4, 7.3, 3.6, strokeColor=color, strokeWidth=stroke))
+        drawing.add(Line(7.3, 7.4, 3.7, 3.6, strokeColor=color, strokeWidth=stroke))
+    elif kind == "stopped":
+        drawing.add(Circle(5.5, 5.5, 4.3, strokeColor=color, fillColor=None, strokeWidth=stroke))
+        drawing.add(Rect(3.6, 3.2, 1.2, 4.6, strokeColor=None, fillColor=color))
+        drawing.add(Rect(6.2, 3.2, 1.2, 4.6, strokeColor=None, fillColor=color))
+    elif kind == "offline":
+        drawing.add(Circle(5.5, 5.5, 4.3, strokeColor=color, fillColor=None, strokeWidth=stroke))
+        drawing.add(Line(2.0, 9.0, 9.0, 2.0, strokeColor=color, strokeWidth=1.5))
+        drawing.add(Line(2.8, 5.0, 4.0, 6.2, strokeColor=color, strokeWidth=stroke))
+        drawing.add(Line(7.0, 4.0, 8.2, 5.0, strokeColor=color, strokeWidth=stroke))
+    elif kind == "demo":
+        drawing.add(Ellipse(1.2, 7.0, 9.8, 10.0, strokeColor=color, fillColor=None, strokeWidth=stroke))
+        drawing.add(Line(1.2, 8.5, 1.2, 2.5, strokeColor=color, strokeWidth=stroke))
+        drawing.add(Line(9.8, 8.5, 9.8, 2.5, strokeColor=color, strokeWidth=stroke))
+        drawing.add(Ellipse(1.2, 1.0, 9.8, 4.0, strokeColor=color, fillColor=None, strokeWidth=stroke))
+    else:
+        drawing.add(Circle(5.5, 5.5, 4.3, strokeColor=color, fillColor=None, strokeWidth=stroke))
+        drawing.add(Line(5.5, 6.3, 5.5, 3.2, strokeColor=color, strokeWidth=stroke))
+        drawing.add(Circle(5.5, 8.0, 0.55, strokeColor=color, fillColor=color, strokeWidth=0))
+    return drawing
+
+
+def _status_cell(label: str, color: colors.Color, kind: str, width_mm: float) -> Table:
+    label_style = ParagraphStyle(
+        f"status-cell-{kind}-{label}",
+        fontName="Helvetica-Bold",
+        fontSize=6.2,
+        leading=7.2,
+        textColor=color,
+        alignment=TA_LEFT,
+    )
+    icon_width = 4 * mm
+    cell = Table(
+        [[_status_icon(kind, color), Paragraph(label, label_style)]],
+        colWidths=[icon_width, max(7 * mm, width_mm * mm - icon_width)],
+    )
+    cell.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 1),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    return cell
 
 
 def generate_operational_report(
@@ -290,13 +378,11 @@ def generate_operational_report(
         Paragraph("Fuente demo", styles["TableHeader"]),
         Paragraph("Actualización", styles["TableHeader"]),
     ]]
-    rag_labels = {
-        RagStatus.GREEN: "Verde", RagStatus.YELLOW: "Amarillo",
-        RagStatus.RED: "Rojo", RagStatus.CRITICAL: "Crítico",
-    }
     rag_colors = {
-        RagStatus.GREEN: GOOD, RagStatus.YELLOW: WARNING,
-        RagStatus.RED: CRITICAL, RagStatus.CRITICAL: colors.HexColor("#7F1D1D"),
+        RagStatus.GREEN: GOOD,
+        RagStatus.YELLOW: WARNING,
+        RagStatus.RED: ALERT,
+        RagStatus.CRITICAL: CRITICAL,
     }
     for kpi_id in snapshot.executive.strategic_kpi_ids:
         item = executive_by_id[kpi_id]
@@ -304,10 +390,7 @@ def generate_operational_report(
             Paragraph(item.name, styles["Tiny"]),
             Paragraph(f"{item.value:g} {item.unit}", styles["Tiny"]),
             Paragraph(f"{item.target:g} {item.unit}", styles["Tiny"]),
-            Paragraph(rag_labels[item.status], ParagraphStyle(
-                f"rag-{item.id}", parent=styles["Tiny"], fontName="Helvetica-Bold",
-                textColor=rag_colors[item.status], alignment=TA_CENTER,
-            )),
+            _status_cell(rag_display_label(item.status), rag_colors[item.status], item.status.value, 18),
             Paragraph(item.source, styles["Tiny"]),
             Paragraph(f"{item.updated_at:%d/%m/%Y %H:%M}", styles["Tiny"]),
         ])
@@ -372,10 +455,7 @@ def generate_operational_report(
                 Paragraph(AREA_BY_ID[item.area_id].name, styles["Tiny"]),
                 Paragraph(item.name, styles["Tiny"]),
                 Paragraph(item.equipment_type, styles["Tiny"]),
-                Paragraph(item.status_label, ParagraphStyle(
-                    f"status-{item.id}", parent=styles["Tiny"], fontName="Helvetica-Bold",
-                    textColor=_status_color(item.status.value), alignment=TA_CENTER,
-                )),
+                _status_cell(item.status_label, _status_color(item.status.value), item.status.value, 21),
                 Paragraph(values, styles["Tiny"]),
                 Paragraph(f"{item.last_update:%d/%m/%Y}<br/>{item.last_update:%H:%M:%S}", ParagraphStyle(
                     f"date-{item.id}", parent=styles["Tiny"], alignment=TA_CENTER,
@@ -409,14 +489,11 @@ def generate_operational_report(
             ]]
             for alarm in snapshot.alarms:
                 severity_label = {
-                    "info": "Información", "warning": "Advertencia", "critical": "Crítica", "offline": "Sin comunicación"
+                    "info": "Información", "warning": "Precaución", "critical": "Crítico", "offline": "Sin comunicación"
                 }[alarm.severity]
                 severity_color = {"info": LIGHT_GRAPHITE, "warning": WARNING, "critical": CRITICAL, "offline": OFFLINE}[alarm.severity]
                 alarm_rows.append([
-                    Paragraph(severity_label, ParagraphStyle(
-                        f"alarm-{alarm.id}", parent=styles["Tiny"], fontName="Helvetica-Bold",
-                        textColor=severity_color, alignment=TA_CENTER,
-                    )),
+                    _status_cell(severity_label, severity_color, alarm.severity, 26),
                     Paragraph(alarm.equipment_name, styles["Tiny"]),
                     Paragraph(alarm.title, styles["Tiny"]),
                     Paragraph(alarm.message, styles["Tiny"]),

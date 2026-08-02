@@ -200,7 +200,7 @@ export function ExecutivePage() {
         <div>{executive.achievements.map((item) => <span key={item}><ShieldCheck size={16} />{item}</span>)}</div>
       </section>
 
-      <KpiDetailPanel kpi={selectedKpi} onClose={() => setSelectedKpi(null)} />
+      <KpiDetailPanel kpi={selectedKpi} trends={executive.trends} onClose={() => setSelectedKpi(null)} />
     </div>
   )
 }

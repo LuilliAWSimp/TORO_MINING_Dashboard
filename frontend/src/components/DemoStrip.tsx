@@ -1,4 +1,4 @@
-import { FlaskConical, LoaderCircle } from 'lucide-react'
+import { Database, LoaderCircle } from 'lucide-react'
 import type { DashboardSnapshot, DemoScenario } from '../types/contracts'
 
 const options: Array<{ id: DemoScenario; label: string }> = [
@@ -20,7 +20,7 @@ export function DemoStrip({
   return (
     <div className="demo-strip" role="status" aria-busy={changing}>
       <div className="demo-strip-copy">
-        <FlaskConical size={16} aria-hidden="true" />
+        <Database size={16} aria-hidden="true" />
         <strong>DATOS DEMO</strong>
         <span>{changing ? 'Cambiando escenario…' : snapshot?.demo_notice ?? 'Simulación local conceptual en preparación.'}</span>
       </div>

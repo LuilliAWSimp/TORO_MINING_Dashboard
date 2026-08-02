@@ -1,6 +1,7 @@
 import { Info } from 'lucide-react'
 import type { KpiDefinition } from '../types/contracts'
 import { formatKpiValue } from '../utils/format'
+import { KpiComplianceBar } from './KpiComplianceBar'
 import { StatusBadge } from './StatusBadge'
 
 export function ExecutiveKpiCard({ kpi, onSelect }: { kpi: KpiDefinition; onSelect: (kpi: KpiDefinition) => void }) {
@@ -11,6 +12,7 @@ export function ExecutiveKpiCard({ kpi, onSelect }: { kpi: KpiDefinition; onSele
         <Info size={14} aria-hidden="true" />
       </div>
       <strong>{formatKpiValue(kpi.value, kpi.unit)}</strong>
+      <KpiComplianceBar kpi={kpi} compact showValues={false} />
       <div className="executive-kpi-footer">
         <StatusBadge type={kpi.status} />
         <span>Meta {formatKpiValue(kpi.target, kpi.unit)}</span>

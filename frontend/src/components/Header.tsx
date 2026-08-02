@@ -45,8 +45,15 @@ export function Header({
           <small>{formatDateTime(clock.toISOString(), false, true)}</small>
         </div>
         <StatusBadge type={snapshot ? 'connected' : 'offline'} label={snapshot ? 'API local' : 'Sin API'} />
-        <button className="icon-button" onClick={() => void refresh()} aria-label="Actualizar datos" title="Actualizar datos">
-          <RefreshCw size={18} className={refreshing ? 'spin' : ''} />
+        <button
+          className="icon-button refresh-button"
+          onClick={() => { if (!refreshing) void refresh() }}
+          aria-label="Actualizar datos"
+          title="Actualizar datos"
+          aria-busy={refreshing}
+          disabled={refreshing}
+        >
+          <RefreshCw size={19} className={refreshing ? 'spin' : ''} aria-hidden="true" />
         </button>
         <button className="icon-button" onClick={toggleTheme} aria-label="Cambiar tema" title="Cambiar tema">
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}

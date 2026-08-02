@@ -1,0 +1,21 @@
+TORO MINING Dashboard - Incremental v0.2.1
+
+Base requerida: TORO MINING Dashboard v0.2.0.
+
+1. Cierre el dashboard si está abierto.
+2. Extraiga el contenido de este ZIP en la raíz del proyecto v0.2.0.
+3. Acepte reemplazar los archivos existentes.
+4. No elimine .venv ni frontend/node_modules si ya funcionan.
+5. Abra PowerShell en la raíz del proyecto y ejecute:
+
+   cd frontend
+   npm run typecheck
+   npm run build
+   npm run test:focused
+   cd ..
+   .\.venv\Scripts\python.exe -m pytest -q backend\tests
+
+6. Inicie con Iniciar_Dashboard.bat.
+
+La preferencia del Resumen se guarda independientemente en:
+toro-mining-summary-layout-v1

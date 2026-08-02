@@ -26,8 +26,8 @@ from backend.app.providers.base import DataProvider
 STATUS_LABELS = {
     EquipmentStatus.RUNNING: "Operando",
     EquipmentStatus.STOPPED: "Detenido",
-    EquipmentStatus.WARNING: "Advertencia",
-    EquipmentStatus.ALARM: "Alarma",
+    EquipmentStatus.WARNING: "Precaución",
+    EquipmentStatus.ALARM: "Alerta",
     EquipmentStatus.OFFLINE: "Sin comunicación",
 }
 
@@ -277,7 +277,7 @@ class DemoDataProvider(DataProvider):
                 equipment_id="ML-201",
                 equipment_name="Molino ML-201",
                 area_id="milling",
-                title="Temperatura en advertencia",
+                title="Temperatura en precaución",
                 message="Tendencia demo de chumacera cercana al límite conceptual.",
                 active_since=timestamp - timedelta(minutes=43),
             ))

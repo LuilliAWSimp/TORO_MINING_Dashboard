@@ -57,6 +57,7 @@ export function ProcessFlow({
                         <span>
                           <strong>{item.id}</strong>
                           <small>{item.equipment_type}</small>
+                          <small className="equipment-state-label">{item.status_label}</small>
                         </span>
                         <StatusBadge type={item.status} label="" />
                       </button>
@@ -81,7 +82,7 @@ export function ProcessFlow({
               if (!item) return null
               return (
                 <button key={item.id} className={`equipment-chip equipment-${item.status}`} onClick={() => onSelect(item)}>
-                  <span><strong>{item.id}</strong><small>{item.equipment_type}</small></span>
+                  <span><strong>{item.id}</strong><small>{item.equipment_type}</small><small className="equipment-state-label">{item.status_label}</small></span>
                   <StatusBadge type={item.status} label="" />
                 </button>
               )

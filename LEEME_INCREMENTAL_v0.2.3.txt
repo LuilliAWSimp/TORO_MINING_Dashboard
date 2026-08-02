@@ -1,0 +1,28 @@
+TORO MINING Dashboard - Incremental v0.2.3
+Mina San Bernardo
+
+Aplicacion:
+1. Cierre el dashboard.
+2. Extraiga este ZIP en la raiz de la carpeta de desarrollo mas reciente.
+3. Acepte reemplazar los archivos existentes.
+4. Ejecute Iniciar_Dashboard.bat.
+
+El directorio frontend/dist ya esta incluido y permite iniciar sin recompilar.
+
+Comprobaciones opcionales en una instalacion que ya tenga node_modules:
+  cd frontend
+  npm run typecheck
+  npm run build
+  npm run test:focused
+  cd ..
+  .\.venv\Scripts\python.exe -m pytest -q backend\tests
+
+Alcance:
+- Tooltip compartido e interactivo para graficas.
+- RefreshCw visible y bloqueado mientras actualiza.
+- Contraste claro/oscuro corregido.
+- Iconos, etiquetas y colores de estados centralizados.
+- Calidad general sustituida visualmente por Estado operativo y causa.
+- PDF con estados equivalentes, iconos y separacion Alerta/Crítico.
+
+No cambia escenarios, contratos de API, formulas, datos demo ni logica operativa.
