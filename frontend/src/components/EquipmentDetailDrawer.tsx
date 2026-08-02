@@ -1,34 +1,52 @@
-import { Activity, Clock3, Database, X } from 'lucide-react'
+import { Activity, AlertCircle, Clock3, Database, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../services/api'
-import type { EquipmentDetailResponse, EquipmentState } from '../types/contracts'
+import type { DemoScenario, EquipmentDetailResponse, EquipmentState } from '../types/contracts'
 import { formatDateTime } from '../utils/format'
 import { StatusBadge } from './StatusBadge'
 import { TimeSeriesChart } from './TimeSeriesChart'
 
 const chartColors = ['#C9A227', '#4E8AA8', '#4EA47A']
 
-export function EquipmentDetailDrawer({ equipment, onClose }: { equipment: EquipmentState | null; onClose: () => void }) {
+export function EquipmentDetailDrawer({
+  equipment,
+  scenario,
+  onClose,
+}: {
+  equipment: EquipmentState | null
+  scenario: DemoScenario
+  onClose: () => void
+}) {
   const [detail, setDetail] = useState<EquipmentDetailResponse | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!equipment) {
       setDetail(null)
+      setError(null)
       return
     }
     const controller = new AbortController()
+    setDetail(null)
+    setError(null)
     setLoading(true)
-    api.getEquipment(equipment.id, controller.signal)
-      .then(setDetail)
-      .finally(() => setLoading(false))
+    api.getEquipment(equipment.id, scenario, controller.signal)
+      .then((response) => {
+        if (response.scenario.id !== scenario) throw new Error('El detalle corresponde a otro escenario.')
+        setDetail(response)
+      })
+      .catch((reason: unknown) => {
+        if (controller.signal.aborted) return
+        setError(reason instanceof Error ? reason.message : 'No fue posible cargar el detalle demo.')
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
     return () => controller.abort()
-  }, [equipment])
+  }, [equipment, scenario])
 
-  const chartData = useMemo(() => {
-    if (!detail) return []
-    return detail.history.map((row) => ({ ...row }))
-  }, [detail])
+  const chartData = useMemo(() => detail?.history.map((row) => ({ ...row })) ?? [], [detail])
 
   if (!equipment) return null
   const current = detail?.equipment ?? equipment
@@ -53,7 +71,7 @@ export function EquipmentDetailDrawer({ equipment, onClose }: { equipment: Equip
         </div>
         <div className="drawer-status-row">
           <StatusBadge type={current.status} />
-          <StatusBadge type="demo" />
+          <StatusBadge type="demo" label={scenario === 'startup' ? 'Arranque 400 t/d' : 'Objetivo 1,000 t/d'} />
         </div>
         <p className="drawer-description">{current.description}</p>
         <div className="drawer-meta-grid">
@@ -74,7 +92,9 @@ export function EquipmentDetailDrawer({ equipment, onClose }: { equipment: Equip
         </section>
         <section className="drawer-section">
           <h3>Tendencia demo · 6 horas</h3>
-          {loading ? <div className="drawer-loading">Cargando tendencia…</div> : (
+          {loading ? <div className="drawer-loading">Cargando tendencia…</div> : error ? (
+            <div className="drawer-loading drawer-error"><AlertCircle size={18} />{error}</div>
+          ) : (
             <TimeSeriesChart data={chartData} series={series} height={260} showLegend />
           )}
         </section>

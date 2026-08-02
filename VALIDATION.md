@@ -1,45 +1,106 @@
 # Resultados de validación
 
-Fecha: 31/07/2026, zona horaria America/Monterrey.
+Fecha: 02/08/2026. Zona horaria de la aplicación: `America/Monterrey`.
 
-## Backend
+## Backend y API
 
 - `python -m compileall -q backend run_dashboard.py`: correcto.
-- `python -m pytest -q backend/tests/smoke_test.py`: **3 pruebas aprobadas**.
-- `/api/v1/health`: HTTP 200, `DATA_MODE=demo`.
-- `/api/v1/catalog`: siete áreas conceptuales y dieciséis equipos representativos.
-- `/api/v1/dashboard/snapshot`: KPIs, dieciséis equipos, tres alarmas y tendencias coherentes.
-- Estados presentes en la misma instantánea: operando, detenido, advertencia, alarma y sin comunicación.
-- La producción, energía y agua se derivan del mismo bloque temporal determinista de cinco segundos.
+- `python -m pytest -q backend/tests`: **9 pruebas aprobadas**.
+- Escenario predeterminado: `startup`.
+- Snapshot, catálogo, detalle de equipo y PDF verificados con `startup` y `target`.
+- Los dos escenarios devuelven contratos completos y distintos.
+- Catálogo ejecutivo: **44 KPIs** en ambos escenarios.
+- Tendencia objetivo: **12 semanas**, comparada contra la hoja `Tendencias`.
+- Valores objetivo de los 44 KPIs comparados contra `Datos Operación`: sin diferencias.
+- Reglas RAG probadas en límites para `higher_is_better` y `lower_is_better`.
+- Dirección explícita verificada en KPIs de ambos sentidos.
+- Solo los diez KPIs respaldados por `Definiciones KPI` contienen definición completa; los demás conservan campos opcionales o `Pendiente de definición`.
+- El detalle de `VF-102` fue verificado en ambos escenarios y conserva valores propios por escenario.
+- El simulador de arranque mantiene estados operando, detenido, advertencia, alarma y sin comunicación.
 
 ## Frontend
 
-- Se compiló el código TS/TSX mediante el constructor local `scripts/build_offline_bundle.js` sin diagnósticos de sintaxis.
-- Se verificaron las siete rutas: Resumen, Proceso, Energía, Producción, Agua y jales, Alarmas y Reportes.
-- Se abrió el detalle de Tolva HT-101.
-- Se verificó cambio oscuro/claro y persistencia de `toro-mining-theme`.
-- Se verificaron 1920x1080 y 1366x768 en Chromium headless.
+### Construcción ejecutada
+
+- `node scripts/build_offline_bundle.js`: correcto, **40 módulos compilados** desde los mismos archivos TS/TSX.
+- Validación TypeScript estricta auxiliar con declaraciones locales de dependencias: correcta.
+- `frontend/dist` fue regenerado y se incluye en la entrega.
+
+### Validación visual y funcional
+
+Se verificó la nueva vista `Ejecutivo` en Chromium headless con:
+
+- 1920x1080 y 1366x768.
+- Tema oscuro y tema claro.
+- Escenario `startup` y escenario `target`.
+- Selector segmentado y selección persistida en `toro-mining-demo-scenario`.
+- Tema persistido de forma independiente en `toro-mining-theme`.
+- Cambio global de escenario con actualización conjunta de snapshot y catálogo.
+- Catálogo de 44 KPIs.
+- Fechas legibles en lugar de seriales de Excel.
+- Gráficas separadas para producción, disponibilidad, recuperación, agua, energía y MTBF.
+- Plan contra real, SPI/CPI y burn-down.
+- Detalle de equipo abierto en el escenario objetivo.
 - Errores de consola durante la validación final: **0**.
-- Los recursos de la compilación local no realizan solicitudes a CDN ni cargan fuentes externas.
+- Ausencia del nombre incorrecto proveniente de la referencia: confirmada.
 
-### Limitación del entorno de construcción
+Capturas incluidas:
 
-El registro npm disponible en este entorno aislado devolvió errores y el navegador bloqueó la navegación HTTP local mediante una política administrativa. Por ello:
+```text
+docs/validation/executive-target-dark-1920x1080.png
+docs/validation/executive-startup-dark-1366x768.png
+docs/validation/executive-target-light-1366x768.png
+docs/validation/scenario-target-equipment-1366x768.png
+```
 
-1. No se afirma que `npm install`, `npm run typecheck` o el build normal de Vite se hayan ejecutado aquí.
-2. Se conservan `package.json`, TypeScript, Vite, Recharts y Lucide React para ejecutar el build normal en un equipo con npm disponible.
-3. Para validar la entrega se generó `frontend/dist` a partir del mismo código React/TypeScript con un runtime React local y adaptadores offline de validación.
-4. Los endpoints HTTP reales se probaron por separado contra FastAPI; el layout se probó en Chromium con la misma compilación y una instantánea obtenida del endpoint real.
+## Reportes PDF
 
-## Reporte Operativo
+Se generaron y revisaron dos archivos reales:
 
-- Endpoint probado: HTTP 200 y `application/pdf`.
-- Indicador `DATOS DEMO`: presente.
-- Documento final: tres páginas A4, fondo blanco.
-- Incluye marca, mina, generación, periodo, turno, KPIs, tres gráficas, equipos, alarmas, actualización y numeración.
-- PDF renderizado a PNG a 150 DPI y revisado visualmente.
-- Sin texto cortado, superposición o página vacía en la versión final.
+```text
+sample_output/reporte_operativo_startup_demo.pdf
+sample_output/reporte_operativo_target_demo.pdf
+```
+
+Resultados:
+
+- Tres páginas A4 por reporte.
+- Fondo blanco y diseño de impresión.
+- Escenario visible en portada.
+- Siete KPIs estratégicos con valor, meta, RAG, fuente y actualización.
+- Tendencias de producción, demanda eléctrica y agua.
+- Equipos y alarmas del escenario solicitado.
+- Numeración de páginas.
+- Renderizado a PNG a 150 DPI y revisión visual.
+- Sin texto cortado, superposición, página vacía ni encabezado huérfano.
+
+## Limitación del entorno npm
+
+El entorno aislado utilizado para esta entrega no pudo completar `npm install`: el registro npm interno no proporcionó el paquete `yallist-3.1.1.tgz`. Como consecuencia, aquí no fue posible ejecutar con dependencias reales:
+
+```text
+npm run typecheck
+npm run build
+```
+
+No se oculta esta limitación ni se afirma que esos dos comandos hayan pasado en este entorno. Para reducir el riesgo se realizaron las siguientes verificaciones:
+
+1. Transpilación de todos los archivos TS/TSX con TypeScript mediante `build_offline_bundle.js`.
+2. Validación estricta auxiliar de los contratos internos.
+3. Ejecución visual completa del bundle generado en Chromium.
+4. Pruebas independientes de todos los endpoints FastAPI.
+
+En una computadora con acceso normal a npm deben ejecutarse los comandos oficiales antes de construir el `.exe`:
+
+```powershell
+cd frontend
+npm install
+npm run typecheck
+npm run build
+```
+
+El script `setup_windows.ps1` realiza estas comprobaciones y se detiene si alguna falla.
 
 ## Ejecutable
 
-No se generó un `.exe` de Windows porque el entorno actual es Linux. Se incluye `ToroMiningDashboard.spec` y `scripts/build_windows_exe.ps1` para producirlo de forma reproducible en Windows 10/11.
+No se generó un `.exe` de Windows porque el entorno actual es Linux. Se incluyen `ToroMiningDashboard.spec` y `scripts/build_windows_exe.ps1` para construirlo de forma reproducible en Windows 10/11.

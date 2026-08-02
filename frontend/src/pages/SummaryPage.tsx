@@ -39,7 +39,7 @@ export function SummaryPage() {
 
       <div className="kpi-grid summary-kpis">
         <KpiCard label="Producción actual" value={`${formatNumber(k.production_current_tph)} t/h`} icon={Factory} detail="Ritmo demo del proceso" tone="gold" trend="up" />
-        <KpiCard label="Acumulado del día" value={`${formatNumber(k.production_today_t)} t`} icon={Scale} detail={`${formatNumber(k.objective_progress_pct)} % de 400 t/d`} tone="gold" />
+        <KpiCard label="Acumulado del día" value={`${formatNumber(k.production_today_t)} t`} icon={Scale} detail={`${formatNumber(k.objective_progress_pct)} % de ${formatNumber(k.objective_tpd, 0)} t/d`} tone="gold" />
         <KpiCard label="Demanda eléctrica" value={`${formatNumber(k.power_kw)} kW`} icon={Zap} detail="Demanda instantánea demo" tone="info" />
         <KpiCard label="Energía acumulada" value={`${formatNumber(k.energy_today_kwh)} kWh`} icon={BatteryCharging} detail={`${formatNumber(k.specific_energy_kwh_t, 2)} kWh/t`} tone="info" />
         <KpiCard label="Agua recirculada" value={`${formatNumber(k.water_recirculation_pct)} %`} icon={Droplets} detail="Balance conceptual" tone="good" />

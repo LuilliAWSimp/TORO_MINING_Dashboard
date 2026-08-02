@@ -31,7 +31,7 @@ from reportlab.pdfgen import canvas
 
 from backend.app.catalog import AREA_BY_ID
 from backend.app.config import settings
-from backend.app.models import DashboardSnapshot
+from backend.app.models import DashboardSnapshot, DemoScenario, RagStatus
 from backend.app.providers.base import DataProvider
 
 
@@ -117,14 +117,15 @@ def _status_color(status: str):
 
 def generate_operational_report(
     provider: DataProvider,
+    scenario: DemoScenario = DemoScenario.STARTUP,
     period: str = "current_shift",
     shift: str = "current",
     start: datetime | None = None,
     end: datetime | None = None,
 ) -> Path:
-    snapshot = provider.get_snapshot(window_hours=12 if period != "day" else 24)
+    snapshot = provider.get_snapshot(scenario=scenario, window_hours=12 if period != "day" else 24)
     generated_at = snapshot.generated_at
-    file_name = f"reporte_operativo_{generated_at:%Y%m%d_%H%M%S}.pdf"
+    file_name = f"reporte_operativo_{scenario.value}_{generated_at:%Y%m%d_%H%M%S}.pdf"
     output = settings.reports_dir / file_name
 
     styles = getSampleStyleSheet()
@@ -204,10 +205,15 @@ def generate_operational_report(
         fontName="Helvetica-Bold", fontSize=12, leading=14, spaceAfter=3 * mm,
     )))
 
+    scenario_title = (
+        "ESCENARIO DEMO · ARRANQUE 400 t/d"
+        if scenario == DemoScenario.STARTUP
+        else "ESCENARIO DEMO · OBJETIVO 1,000 t/d · MES 36"
+    )
     demo_banner = Table(
-        [[Paragraph("DATOS DEMO", ParagraphStyle("Demo", parent=styles["Small"], fontName="Helvetica-Bold", textColor=GRAPHITE, alignment=TA_CENTER)),
+        [[Paragraph(scenario_title, ParagraphStyle("Demo", parent=styles["Small"], fontName="Helvetica-Bold", textColor=GRAPHITE, alignment=TA_CENTER)),
           Paragraph("Simulación conceptual; no representa inventario, producción ni mediciones confirmadas.", styles["Small"])]],
-        colWidths=[31 * mm, 149 * mm],
+        colWidths=[70 * mm, 110 * mm],
     )
     demo_banner.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), GOLD_LIGHT),
@@ -223,7 +229,8 @@ def generate_operational_report(
     metadata = [
         ["Generado", f"{generated_at:%d/%m/%Y %H:%M:%S}", "Periodo", _period_label(period, shift, start, end, snapshot)],
         ["Turno", snapshot.shift, "Última lectura", f"{snapshot.last_reading_at:%d/%m/%Y %H:%M:%S}"],
-        ["Fuente", snapshot.source_label, "Catálogo", snapshot.catalog_status],
+        ["Fuente", snapshot.source_label, "Escenario", snapshot.scenario.label],
+        ["Catálogo", snapshot.catalog_status, "Capacidad demo", f"{snapshot.scenario.capacity_tpd:,.0f} t/d"],
     ]
     metadata_table = Table(metadata, colWidths=[22 * mm, 58 * mm, 25 * mm, 75 * mm])
     metadata_table.setStyle(TableStyle([
@@ -246,7 +253,7 @@ def generate_operational_report(
     k = snapshot.kpis
     kpi_rows = [
         ["Producción actual", f"{k.production_current_tph:.1f} t/h", "Acumulado del día", f"{k.production_today_t:.1f} t"],
-        ["Avance objetivo 400 t/d", f"{k.objective_progress_pct:.1f} %", "Demanda eléctrica", f"{k.power_kw:.1f} kW"],
+        [f"Avance objetivo {k.objective_tpd:,.0f} t/d", f"{k.objective_progress_pct:.1f} %", "Demanda eléctrica", f"{k.power_kw:.1f} kW"],
         ["Energía acumulada", f"{k.energy_today_kwh:.1f} kWh", "Consumo específico", f"{k.specific_energy_kwh_t:.2f} kWh/t"],
         ["Agua recirculada", f"{k.water_recirculation_pct:.1f} %", "Alarmas activas", str(k.active_alarms)],
     ]
@@ -273,6 +280,54 @@ def generate_operational_report(
     ]))
     story.extend([kpi_table, Spacer(1, 3 * mm)])
 
+    story.append(Paragraph("KPIs estratégicos del escenario", styles["Section"]))
+    executive_by_id = {item.id: item for item in snapshot.executive.kpis}
+    strategic_rows = [[
+        Paragraph("Indicador", styles["TableHeader"]),
+        Paragraph("Valor", styles["TableHeader"]),
+        Paragraph("Meta", styles["TableHeader"]),
+        Paragraph("RAG", styles["TableHeader"]),
+        Paragraph("Fuente demo", styles["TableHeader"]),
+        Paragraph("Actualización", styles["TableHeader"]),
+    ]]
+    rag_labels = {
+        RagStatus.GREEN: "Verde", RagStatus.YELLOW: "Amarillo",
+        RagStatus.RED: "Rojo", RagStatus.CRITICAL: "Crítico",
+    }
+    rag_colors = {
+        RagStatus.GREEN: GOOD, RagStatus.YELLOW: WARNING,
+        RagStatus.RED: CRITICAL, RagStatus.CRITICAL: colors.HexColor("#7F1D1D"),
+    }
+    for kpi_id in snapshot.executive.strategic_kpi_ids:
+        item = executive_by_id[kpi_id]
+        strategic_rows.append([
+            Paragraph(item.name, styles["Tiny"]),
+            Paragraph(f"{item.value:g} {item.unit}", styles["Tiny"]),
+            Paragraph(f"{item.target:g} {item.unit}", styles["Tiny"]),
+            Paragraph(rag_labels[item.status], ParagraphStyle(
+                f"rag-{item.id}", parent=styles["Tiny"], fontName="Helvetica-Bold",
+                textColor=rag_colors[item.status], alignment=TA_CENTER,
+            )),
+            Paragraph(item.source, styles["Tiny"]),
+            Paragraph(f"{item.updated_at:%d/%m/%Y %H:%M}", styles["Tiny"]),
+        ])
+    strategic_table = Table(
+        strategic_rows,
+        colWidths=[43 * mm, 25 * mm, 25 * mm, 19 * mm, 39 * mm, 29 * mm],
+        repeatRows=1,
+    )
+    strategic_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), GRAPHITE),
+        ("GRID", (0, 0), (-1, -1), 0.4, BORDER),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [PAPER, PANEL]),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ]))
+    story.extend([strategic_table, Spacer(1, 3 * mm)])
+
     with tempfile.TemporaryDirectory(prefix="toro_report_") as tmp:
         tmp_path = Path(tmp)
         timestamps = [item.timestamp for item in snapshot.trends]
@@ -284,8 +339,13 @@ def generate_operational_report(
         for filename, values, title, unit, accent in chart_specs:
             _chart(tmp_path / filename, timestamps, values, title, unit, accent)
 
-        story.append(Paragraph("Tendencias operativas", styles["Section"]))
-        for filename, _, _, _, _ in chart_specs:
+        first_filename = chart_specs[0][0]
+        story.append(KeepTogether([
+            Paragraph("Tendencias operativas", styles["Section"]),
+            Image(str(tmp_path / first_filename), width=180 * mm, height=51 * mm),
+            Spacer(1, 1 * mm),
+        ]))
+        for filename, _, _, _, _ in chart_specs[1:]:
             story.append(Image(str(tmp_path / filename), width=180 * mm, height=51 * mm))
             story.append(Spacer(1, 1 * mm))
 
@@ -338,7 +398,6 @@ def generate_operational_report(
         ]))
         story.append(equipment_table)
 
-        story.append(PageBreak())
         story.append(Paragraph("Alarmas relevantes", styles["Section"]))
         if snapshot.alarms:
             alarm_rows = [[

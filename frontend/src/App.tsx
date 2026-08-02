@@ -3,6 +3,7 @@ import { AppShell } from './components/AppShell'
 import { DashboardProvider } from './components/DashboardContext'
 import { AlarmsPage } from './pages/AlarmsPage'
 import { EnergyPage } from './pages/EnergyPage'
+import { ExecutivePage } from './pages/ExecutivePage'
 import { ProcessPage } from './pages/ProcessPage'
 import { ProductionPage } from './pages/ProductionPage'
 import { ReportsPage } from './pages/ReportsPage'
@@ -15,6 +16,7 @@ export default function App() {
       <Routes>
         <Route element={<AppShell />}>
           <Route index element={<SummaryPage />} />
+          <Route path="ejecutivo" element={<ExecutivePage />} />
           <Route path="proceso" element={<ProcessPage />} />
           <Route path="energia" element={<EnergyPage />} />
           <Route path="produccion" element={<ProductionPage />} />

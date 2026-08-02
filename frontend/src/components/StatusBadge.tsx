@@ -6,10 +6,11 @@ import {
   CirclePlay,
   Info,
   Radio,
+  ShieldCheck,
 } from 'lucide-react'
-import type { AlarmEvent, DataQuality, EquipmentStatus } from '../types/contracts'
+import type { AlarmEvent, DataQuality, EquipmentStatus, RagStatus } from '../types/contracts'
 
-type BadgeType = EquipmentStatus | DataQuality | AlarmEvent['severity'] | 'connected' | 'demo'
+type BadgeType = EquipmentStatus | DataQuality | AlarmEvent['severity'] | RagStatus | 'connected' | 'demo'
 
 const labels: Record<BadgeType, string> = {
   running: 'Operando',
@@ -22,6 +23,9 @@ const labels: Record<BadgeType, string> = {
   info: 'Información',
   connected: 'Conectado',
   demo: 'Datos demo',
+  green: 'Verde',
+  yellow: 'Amarillo',
+  red: 'Rojo',
 }
 
 const icons = {
@@ -35,6 +39,9 @@ const icons = {
   info: Info,
   connected: Radio,
   demo: Info,
+  green: ShieldCheck,
+  yellow: AlertTriangle,
+  red: AlertCircle,
 } satisfies Record<BadgeType, typeof Info>
 
 export function StatusBadge({ type, label }: { type: BadgeType; label?: string }) {

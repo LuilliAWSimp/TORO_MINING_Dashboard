@@ -158,7 +158,7 @@ function chartFactory(){
     const elements=[];
     for(let i=0;i<5;i++){const yy=T+(H-T-B)*i/4; const value=max-(max-min)*i/4; elements.push(React.createElement('line',{key:'g'+i,x1:L,x2:W-R,y1:yy,y2:yy,stroke:'var(--chart-grid)',strokeWidth:1})); elements.push(React.createElement('text',{key:'gy'+i,x:L-7,y:yy+4,textAnchor:'end',fill:'var(--text-muted)',fontSize:10},value.toFixed(Math.abs(value)<10?1:0)));}
     const labelIndexes=[0,Math.floor((data.length-1)/4),Math.floor((data.length-1)/2),Math.floor((data.length-1)*3/4),data.length-1].filter(function(v,i,a){return v>=0&&a.indexOf(v)===i;});
-    labelIndexes.forEach(function(i){const row=data[i]||{}; let label=row.timestamp||''; if(xAxis&&typeof xAxis.props.tickFormatter==='function') label=xAxis.props.tickFormatter(label); elements.push(React.createElement('text',{key:'x'+i,x:x(i),y:H-8,textAnchor:i===0?'start':i===data.length-1?'end':'middle',fill:'var(--text-muted)',fontSize:10},label));});
+    labelIndexes.forEach(function(i){const row=data[i]||{}; let label=row[(xAxis&&xAxis.props.dataKey)||'timestamp']||''; if(xAxis&&typeof xAxis.props.tickFormatter==='function') label=xAxis.props.tickFormatter(label); elements.push(React.createElement('text',{key:'x'+i,x:x(i),y:H-8,textAnchor:i===0?'start':i===data.length-1?'end':'middle',fill:'var(--text-muted)',fontSize:10},label));});
     series.forEach(function(s,si){
       const points=data.map(function(row,i){const v=Number(row[s.dataKey]); return Number.isFinite(v)?[x(i),y(v),v]:null;}).filter(Boolean);
       if(!points.length)return;

@@ -7,6 +7,11 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+class DemoScenario(str, Enum):
+    STARTUP = "startup"
+    TARGET = "target"
+
+
 class DataQuality(str, Enum):
     GOOD = "good"
     WARNING = "warning"
@@ -20,6 +25,26 @@ class EquipmentStatus(str, Enum):
     WARNING = "warning"
     ALARM = "alarm"
     OFFLINE = "offline"
+
+
+class EvaluationDirection(str, Enum):
+    HIGHER_IS_BETTER = "higher_is_better"
+    LOWER_IS_BETTER = "lower_is_better"
+
+
+class RagStatus(str, Enum):
+    GREEN = "green"
+    YELLOW = "yellow"
+    RED = "red"
+    CRITICAL = "critical"
+
+
+class ScenarioInfo(BaseModel):
+    id: DemoScenario
+    label: str
+    short_label: str
+    capacity_tpd: float
+    target_month: int | None = None
 
 
 class SensorDefinition(BaseModel):
@@ -50,15 +75,38 @@ class AreaDefinition(BaseModel):
     equipment_ids: list[str] = Field(default_factory=list)
 
 
+class KpiDefinition(BaseModel):
+    id: str
+    name: str
+    domain: str
+    value: float
+    unit: str
+    target: float
+    yellow_limit: float
+    red_limit: float
+    evaluation_direction: EvaluationDirection
+    source: str
+    frequency: str | None = None
+    responsible: str | None = None
+    definition: str | None = None
+    formula: str | None = None
+    management_use: str | None = None
+    updated_at: datetime
+    status: RagStatus
+
+
 class CatalogResponse(BaseModel):
     mine: str
+    scenario: ScenarioInfo
     phase: str
     objective_tpd: float
     future_target_tpd: float
     inventory_status: str
     source_label: str
+    source_notice: str
     areas: list[AreaDefinition]
     equipment: list[EquipmentDefinition]
+    kpis: list[KpiDefinition]
 
 
 class Measurement(BaseModel):
@@ -124,8 +172,85 @@ class AlarmEvent(BaseModel):
     acknowledged: bool = False
 
 
+class ExecutiveTrendPoint(BaseModel):
+    week: datetime
+    production_tpd: float
+    availability_pct: float
+    recovery_au_pct: float
+    fresh_water_m3_t: float
+    energy_kwh_t: float
+    mtbf_h: float
+    trifr: float
+    critical_alarms: int
+    spi: float
+    cpi: float
+    plan_cumulative_t: float
+    actual_cumulative_t: float
+    open_issues: int
+
+
+class GeneralRagItem(BaseModel):
+    id: str
+    label: str
+    status: RagStatus
+    supporting_kpi_ids: list[str] = Field(default_factory=list)
+
+
+class AreaPerformance(BaseModel):
+    area: str
+    kpi_id: str
+    trend: Literal["up", "down", "flat"]
+    observation: str | None = None
+    responsible: str | None = None
+
+
+class ExecutiveControl(BaseModel):
+    plan_completed_pct: float
+    actual_completed_pct: float
+    spi: float
+    cpi: float
+    issues_open: int
+    budget_opex_month_usd_m: float
+    actual_opex_month_usd_m: float
+    cost_variance_usd_m: float
+    eac_annual_usd_m: float
+    contingency_consumed_pct: float
+
+
+class ExecutiveRisk(BaseModel):
+    id: str
+    title: str
+    probability: str
+    impact: str
+    status: RagStatus
+    action: str
+
+
+class ExecutiveMilestone(BaseModel):
+    id: str
+    title: str
+    date: datetime
+    state: str
+    status: RagStatus
+    criterion: str
+
+
+class ExecutiveDashboard(BaseModel):
+    kpis: list[KpiDefinition]
+    strategic_kpi_ids: list[str]
+    general_rag: list[GeneralRagItem]
+    area_performance: list[AreaPerformance]
+    trends: list[ExecutiveTrendPoint]
+    control: ExecutiveControl
+    risks: list[ExecutiveRisk]
+    milestones: list[ExecutiveMilestone]
+    achievements: list[str]
+    source_notice: str
+
+
 class DashboardSnapshot(BaseModel):
     mine: str
+    scenario: ScenarioInfo
     shift: str
     generated_at: datetime
     last_reading_at: datetime
@@ -137,14 +262,17 @@ class DashboardSnapshot(BaseModel):
     equipment: list[EquipmentState]
     alarms: list[AlarmEvent]
     trends: list[TrendPoint]
+    executive: ExecutiveDashboard
 
 
 class EquipmentDetailResponse(BaseModel):
+    scenario: ScenarioInfo
     equipment: EquipmentState
     history: list[dict[str, float | str | datetime | None]]
 
 
 class ReportRequest(BaseModel):
+    scenario: DemoScenario = DemoScenario.STARTUP
     period: Literal["current_shift", "day", "custom"] = "current_shift"
     shift: Literal["current", "1", "2", "3"] = "current"
     start: datetime | None = None

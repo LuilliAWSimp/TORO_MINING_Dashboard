@@ -25,13 +25,15 @@ interface TimeSeriesChartProps {
   height?: number
   domain?: [number | 'auto', number | 'auto']
   showLegend?: boolean
+  xKey?: string
+  xFormatter?: (value: string) => string
 }
 
-function ChartTooltip({ active, payload, label }: any) {
+function ChartTooltip({ active, payload, label, labelFormatter }: any) {
   if (!active || !payload?.length) return null
   return (
     <div className="chart-tooltip">
-      <strong>{typeof label === 'string' ? compactTime(label) : label}</strong>
+      <strong>{typeof label === 'string' ? labelFormatter(label) : label}</strong>
       {payload.map((item: any) => (
         <div key={item.dataKey} className="tooltip-row">
           <span className="tooltip-dot" style={{ backgroundColor: item.color }} />
@@ -43,7 +45,7 @@ function ChartTooltip({ active, payload, label }: any) {
   )
 }
 
-export function TimeSeriesChart({ data, series, height = 220, domain = ['auto', 'auto'], showLegend = true }: TimeSeriesChartProps) {
+export function TimeSeriesChart({ data, series, height = 220, domain = ['auto', 'auto'], showLegend = true, xKey = 'timestamp', xFormatter = compactTime }: TimeSeriesChartProps) {
   const hasArea = series.some((item) => item.type === 'area')
   const Chart = hasArea ? AreaChart : LineChart
   return (
@@ -62,8 +64,8 @@ export function TimeSeriesChart({ data, series, height = 220, domain = ['auto', 
         <Chart data={data} margin={{ top: showLegend ? 26 : 8, right: 10, left: -14, bottom: 0 }}>
           <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
           <XAxis
-            dataKey="timestamp"
-            tickFormatter={compactTime}
+            dataKey={xKey}
+            tickFormatter={xFormatter}
             tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
@@ -76,7 +78,7 @@ export function TimeSeriesChart({ data, series, height = 220, domain = ['auto', 
             tickLine={false}
             width={52}
           />
-          <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--border-strong)', strokeDasharray: '4 4' }} />
+          <Tooltip content={<ChartTooltip labelFormatter={xFormatter} />} cursor={{ stroke: 'var(--border-strong)', strokeDasharray: '4 4' }} />
           {series.map((item) => item.type === 'area' ? (
             <Area
               key={item.key}

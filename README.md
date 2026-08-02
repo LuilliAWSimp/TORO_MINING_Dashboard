@@ -1,50 +1,103 @@
 # TORO MINING - Dashboard local de Mina San Bernardo
 
-MVP industrial local e independiente para visualizar una planta minera Au-Ag conceptual. La aplicación usa datos deterministas de demostración y no está conectada a SCADA, PLC, historiadores ni bases de datos operativas.
+Dashboard industrial local e independiente para una operación minera Au-Ag conceptual. La aplicación utiliza datos deterministas de demostración y no está conectada con SCADA, PLC, ERP, CMMS, laboratorio, historiadores ni bases operativas.
 
 > **DATOS DEMO:** ningún valor representa producción, inventario, ley, recuperación metalúrgica o medición real confirmada.
 
+## Escenarios demo
+
+El sistema incluye dos escenarios globales, resueltos por el backend mediante `DemoDataProvider`:
+
+- `startup`: **Arranque · 400 t/d**. Es el escenario predeterminado y conserva el simulador operativo inicial.
+- `target`: **Objetivo · 1,000 t/d · Mes 36**. Usa valores propios tomados de la referencia de operación al 100%; no es un escalamiento lineal del escenario de arranque.
+
+La selección se realiza en la franja `DATOS DEMO`, se guarda en `localStorage` con la clave `toro-mining-demo-scenario` y es independiente del tema visual, almacenado en `toro-mining-theme`.
+
+El cambio de escenario actualiza de forma conjunta el snapshot y el catálogo. Mientras se consulta el nuevo escenario se oculta el contenido anterior para evitar mezclar información.
+
 ## Funcionalidad incluida
 
-- Resumen operativo con flujo conceptual interactivo, KPIs y tendencias.
+- Resumen operativo original con flujo conceptual interactivo, KPIs y tendencias.
+- Nueva vista `Ejecutivo` adaptada al sistema visual de TORO MINING.
+- Estado general RAG calculado.
+- Siete KPIs estratégicos con detalle de fuente, meta, umbrales y frecuencia.
+- Catálogo configurable de 44 KPIs.
+- Tendencias separadas de 12 semanas, plan contra real, SPI/CPI y burn-down de issues.
+- Desempeño por área, riesgos, próximos hitos y logros del mes.
 - Vistas de Proceso, Energía, Producción, Agua y jales, Alarmas y Reportes.
 - Catálogo configurable de áreas, equipos y sensores conceptuales.
-- Detalle reutilizable por equipo.
-- Estados demo: operando, detenido, advertencia, alarma y sin comunicación.
-- Tema oscuro y claro persistente en el navegador.
-- Actualización aproximada cada cinco segundos.
-- Reporte Operativo PDF generado localmente desde la misma fuente de datos del dashboard.
+- Detalle reutilizable de equipos en ambos escenarios.
+- Tema oscuro y claro persistente.
+- Variables operativas actualizadas aproximadamente cada cinco segundos.
+- KPIs diarios, semanales y mensuales con marcas de actualización estables según su frecuencia demo.
+- Reporte Operativo PDF generado localmente desde el mismo escenario del dashboard.
 - Frontend compilado servido por FastAPI en un solo proceso.
 - Lanzador de Windows y configuración reproducible de PyInstaller.
+
+## Catálogo KPI
+
+Cada KPI contiene:
+
+```text
+id, nombre, dominio, valor, unidad, meta,
+límite amarillo, límite rojo, dirección de evaluación,
+fuente, frecuencia, responsable, definición, fórmula,
+uso gerencial, fecha de actualización y estado RAG calculado
+```
+
+Las definiciones, fórmulas, frecuencias y responsables se trasladaron únicamente cuando estaban presentes en la hoja `Definiciones KPI`. Los campos no respaldados permanecen opcionales o muestran `Pendiente de definición`.
+
+Las fuentes son metadatos demo. No representan conexiones activas.
+
+## Reglas RAG
+
+Para `higher_is_better`:
+
+- Verde: valor mayor o igual a la meta.
+- Amarillo: entre límite amarillo y meta.
+- Rojo: entre límite rojo y límite amarillo.
+- Crítico: inferior al límite rojo.
+
+Para `lower_is_better`:
+
+- Verde: valor menor o igual a la meta.
+- Amarillo: entre meta y límite amarillo.
+- Rojo: entre límite amarillo y límite rojo.
+- Crítico: superior al límite rojo.
+
+La dirección se infiere inicialmente desde el orden de meta y umbrales, se guarda explícitamente en el catálogo y se prueba para ambos sentidos.
 
 ## Arquitectura
 
 ```text
 frontend/src/
-  components/       presentación reutilizable
-  pages/            módulos navegables
-  services/         cliente de API
-  hooks/            actualización y tema
+  components/       presentación reutilizable y selector de escenario
+  pages/            módulos navegables, incluida la vista Ejecutiva
+  services/         cliente de API con parámetro scenario
+  hooks/            actualización atómica y tema
   types/            contratos TypeScript
   styles/           tokens y CSS propio
 
 backend/app/
-  api/              endpoints HTTP
-  providers/        contrato DataProvider y DemoDataProvider
-  services/         selección del proveedor y PDF
-  catalog.py        áreas, equipos y sensores configurables
-  models.py         contratos Pydantic
-  main.py           API y archivos estáticos
+  api/                    endpoints HTTP
+  providers/              contrato DataProvider y DemoDataProvider
+  services/               selección de proveedor y PDF
+  catalog.py              áreas, equipos y sensores conceptuales
+  executive_catalog.py    escenarios, 44 KPIs, RAG y tendencias ejecutivas
+  models.py               contratos Pydantic
+  main.py                 API y archivos estáticos
 ```
 
-`DATA_MODE=demo` selecciona `DemoDataProvider`. Una integración futura debe implementar el contrato de `backend/app/providers/base.py` y conservar los contratos del backend. Esta versión no contiene adaptadores ficticios o incompletos para SQL, OPC UA, API o historiadores.
+`DATA_MODE=demo` selecciona `DemoDataProvider`. El Excel de referencia no se utiliza en tiempo de ejecución.
 
 ## Requisitos para desarrollo
 
-- Windows 10/11.
-- Python 3.11 o superior.
+- Windows 10/11 de 64 bits.
+- **Python 3.11 o 3.12 de 64 bits. Python 3.12 recomendado.**
 - Node.js 20 o superior.
 - npm.
+
+Python 3.13 y 3.14 no deben utilizarse con las versiones de dependencias fijadas en esta entrega.
 
 ## Instalación en Windows
 
@@ -61,11 +114,9 @@ Después inicie la versión compilada con:
 Iniciar_Dashboard.bat
 ```
 
-El navegador se abre en `http://127.0.0.1:8000`. El backend sirve el frontend ya compilado, por lo que la ejecución final utiliza un solo proceso local.
+El navegador se abre en `http://127.0.0.1:8000`. El backend sirve el frontend compilado y la aplicación final utiliza un solo proceso local.
 
 ## Desarrollo
-
-Después de la instalación:
 
 ```powershell
 .\scripts\dev_windows.ps1
@@ -74,24 +125,61 @@ Después de la instalación:
 - Frontend Vite: `http://127.0.0.1:5173`
 - API y documentación: `http://127.0.0.1:8000/api/docs`
 
-Comandos manuales del frontend:
+Validación manual:
 
 ```powershell
 cd frontend
 npm run typecheck
 npm run build
-```
-
-Validación del backend:
-
-```powershell
+cd ..
 .\.venv\Scripts\python.exe -m compileall backend run_dashboard.py
-.\.venv\Scripts\python.exe -m pytest -q backend\tests\smoke_test.py
+.\.venv\Scripts\python.exe -m pytest -q backend\tests
 ```
+
+## Endpoints y escenario
+
+Todos los endpoints funcionales principales aceptan `scenario=startup|target` y usan `startup` de manera predeterminada:
+
+```text
+GET /api/v1/catalog?scenario=startup
+GET /api/v1/dashboard/snapshot?scenario=startup&window_hours=12
+GET /api/v1/equipment/ML-201?scenario=target
+GET /api/v1/reports/operational?scenario=target&period=day
+```
+
+Otros endpoints:
+
+- `GET /api/v1/health`
+- `GET /api/v1/reports`
+
+## Reporte Operativo PDF
+
+El reporte muestra uno de los siguientes encabezados:
+
+```text
+ESCENARIO DEMO · ARRANQUE 400 t/d
+ESCENARIO DEMO · OBJETIVO 1,000 t/d · MES 36
+```
+
+Incluye los siete KPIs estratégicos y su RAG, además de indicadores operativos, tendencias, equipos y alarmas del mismo escenario solicitado.
+
+Filtros disponibles:
+
+- `period=current_shift|day|custom`
+- `shift=current|1|2|3`
+- `start` y `end` para un periodo personalizado.
+
+Directorio predeterminado en Windows:
+
+```text
+%LOCALAPPDATA%\ToroMining\reports
+```
+
+No se generan Excel, HTML, PNG ni correos.
 
 ## Construcción del ejecutable de Windows
 
-La compilación del `.exe` debe realizarse en Windows:
+La compilación debe realizarse en Windows:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
@@ -104,11 +192,7 @@ Salida esperada:
 dist\TORO_MINING_Dashboard_San_Bernardo.exe
 ```
 
-PyInstaller incluye `frontend/dist` y los recursos del PDF dentro del ejecutable. La aplicación abre el navegador automáticamente y mantiene un solo proceso local.
-
 ## Configuración
-
-Copie `backend/.env.example` como `backend/.env` solamente cuando necesite cambiar valores locales:
 
 ```env
 DATA_MODE=demo
@@ -118,60 +202,17 @@ OPEN_BROWSER=true
 TIMEZONE=America/Monterrey
 ```
 
-No se requiere conexión a internet para ejecutar la versión compilada. La instalación inicial de dependencias sí requiere acceso al registro de npm y a PyPI, salvo que exista una caché local.
-
-## Reportes PDF
-
-Endpoint:
-
-```text
-GET /api/v1/reports/operational
-```
-
-Filtros:
-
-- `period=current_shift|day|custom`
-- `shift=current|1|2|3`
-- `start` y `end` para un periodo personalizado.
-
-Directorio predeterminado en Windows:
-
-```text
-%LOCALAPPDATA%\ToroMining\reports
-```
-
-Se puede modificar mediante `REPORTS_DIR`. No se generan Excel, HTML, PNG ni correos.
-
-## Endpoints principales
-
-- `GET /api/v1/health`
-- `GET /api/v1/catalog`
-- `GET /api/v1/dashboard/snapshot`
-- `GET /api/v1/equipment/{equipment_id}`
-- `GET /api/v1/reports/operational`
-- `GET /api/v1/reports`
-
-## Branding
-
-Los archivos utilizados por frontend y PDF son:
-
-```text
-frontend/public/toro-mining-logo.png
-frontend/public/toro-mining-mark.png
-backend/app/static/toro-mining-logo.png
-backend/app/static/toro-mining-mark.png
-```
-
-Los recursos incluidos fueron preparados con fondo transparente a partir de la referencia visual proporcionada. Para sustituirlos por los originales maestros, conserve esos nombres y proporciones; después ejecute nuevamente `npm run build`.
+No se requiere internet para ejecutar la versión compilada. La instalación inicial de dependencias sí requiere acceso a npm y PyPI.
 
 ## Alcance y seguridad
 
 - No existe autenticación en este MVP.
-- No hay escritura a PLC o SCADA.
+- No hay edición de KPIs.
+- No hay escritura hacia PLC o SCADA.
+- No hay conexiones reales con sistemas externos.
 - No hay correo ni SMTP.
 - No hay Docker.
-- No se calcula recuperación metalúrgica ni ley de mineral.
-- El catálogo se muestra permanentemente como conceptual y no confirmado.
-- El proyecto de referencia no se modifica ni forma parte de esta entrega.
+- El catálogo de equipos continúa marcado como conceptual y no confirmado.
+- El nombre visible de la operación es exclusivamente **Mina San Bernardo**.
 
-Consulte `VALIDATION.md` para los resultados de las pruebas realizadas en esta entrega.
+Consulte `VALIDATION.md` para conocer las pruebas y limitaciones reales de esta entrega.

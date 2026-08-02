@@ -19,18 +19,18 @@ export function ProductionPage() {
       <div className="kpi-grid four-columns">
         <KpiCard label="Ritmo actual" value={`${formatNumber(k.production_current_tph)} t/h`} icon={Factory} tone="gold" detail="Alimentación conceptual" />
         <KpiCard label="Acumulado" value={`${formatNumber(k.production_today_t)} t`} icon={Scale} tone="gold" detail="Desde 00:00" />
-        <KpiCard label="Avance objetivo" value={`${formatNumber(k.objective_progress_pct)} %`} icon={Flag} tone="good" detail="Objetivo fase inicial: 400 t/d" />
+        <KpiCard label="Avance objetivo" value={`${formatNumber(k.objective_progress_pct)} %`} icon={Flag} tone="good" detail={`Objetivo del escenario: ${formatNumber(k.objective_tpd, 0)} t/d`} />
         <KpiCard label="Proyección simple" value={`${formatNumber(projected)} t`} icon={Gauge} tone="info" detail="No es pronóstico operativo" />
       </div>
       <section className="panel objective-panel">
         <div className="objective-copy">
           <span>Avance diario</span>
-          <strong>{formatNumber(k.production_today_t)} / 400 t</strong>
-          <small>Meta futura conceptual: 1,000 t/d. No activa en este MVP.</small>
+          <strong>{formatNumber(k.production_today_t)} / {formatNumber(k.objective_tpd, 0)} t</strong>
+          <small>{snapshot.scenario.id === 'startup' ? 'Meta futura conceptual: 1,000 t/d al mes 36.' : 'Escenario objetivo conceptual del mes 36.'}</small>
         </div>
         <div className="objective-progress" aria-label={`${k.objective_progress_pct}%`}>
           <div style={{ width: `${Math.min(100, k.objective_progress_pct)}%` }} />
-          <i style={{ left: '40%' }}><span>400 t/d</span></i>
+          <i style={{ left: `${Math.min(100, k.objective_tpd / 1000 * 100)}%` }}><span>{formatNumber(k.objective_tpd, 0)} t/d</span></i>
         </div>
       </section>
       <div className="chart-grid two-columns">
