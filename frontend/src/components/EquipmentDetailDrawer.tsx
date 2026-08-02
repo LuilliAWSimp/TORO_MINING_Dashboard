@@ -6,7 +6,7 @@ import { formatDateTime } from '../utils/format'
 import { StatusBadge } from './StatusBadge'
 import { TimeSeriesChart } from './TimeSeriesChart'
 
-const chartColors = ['#BE9D56', '#4E8AA8', '#4EA47A']
+const chartColors = ['#C9A227', '#4E8AA8', '#4EA47A']
 
 export function EquipmentDetailDrawer({ equipment, onClose }: { equipment: EquipmentState | null; onClose: () => void }) {
   const [detail, setDetail] = useState<EquipmentDetailResponse | null>(null)

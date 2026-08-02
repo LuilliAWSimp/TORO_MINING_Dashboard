@@ -35,10 +35,10 @@ export function ProductionPage() {
       </section>
       <div className="chart-grid two-columns">
         <ChartPanel title="Producción instantánea" subtitle="Toneladas por hora">
-          <TimeSeriesChart data={snapshot.trends} series={[{ key: 'production_tph', label: 'Producción', unit: 't/h', color: '#BE9D56', type: 'area' }]} height={320} />
+          <TimeSeriesChart data={snapshot.trends} series={[{ key: 'production_tph', label: 'Producción', unit: 't/h', color: '#C9A227', type: 'area' }]} height={320} />
         </ChartPanel>
         <ChartPanel title="Acumulado del día" subtitle="Trayectoria demo">
-          <TimeSeriesChart data={snapshot.trends} series={[{ key: 'production_cumulative_t', label: 'Acumulado', unit: 't', color: '#96691E', type: 'area' }]} height={320} />
+          <TimeSeriesChart data={snapshot.trends} series={[{ key: 'production_cumulative_t', label: 'Acumulado', unit: 't', color: '#8A6D1F', type: 'area' }]} height={320} />
         </ChartPanel>
       </div>
       <section className="panel note-panel">

@@ -63,7 +63,7 @@ export function SummaryPage() {
         <ChartPanel title="Producción" subtitle="Últimas 12 horas">
           <TimeSeriesChart
             data={snapshot.trends}
-            series={[{ key: 'production_tph', label: 'Producción', unit: 't/h', color: '#BE9D56', type: 'area' }]}
+            series={[{ key: 'production_tph', label: 'Producción', unit: 't/h', color: '#C9A227', type: 'area' }]}
             height={220}
           />
         </ChartPanel>

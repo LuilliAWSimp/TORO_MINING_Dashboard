@@ -9,6 +9,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+from PIL import Image as PILImage
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4, landscape
@@ -188,7 +189,13 @@ def generate_operational_report(
     story = []
     logo_path = settings.assets_dir / "toro-mining-logo.png"
     if logo_path.exists():
-        logo = Image(str(logo_path), width=78 * mm, height=20.3 * mm)
+        max_width, max_height = 78 * mm, 24 * mm
+        with PILImage.open(logo_path) as source:
+            aspect = source.width / source.height
+        width, height = max_width, max_width / aspect
+        if height > max_height:
+            width, height = max_height * aspect, max_height
+        logo = Image(str(logo_path), width=width, height=height)
         logo.hAlign = "CENTER"
         story.extend([logo, Spacer(1, 1.5 * mm)])
     story.append(Paragraph("Reporte Operativo", styles["ReportTitle"]))

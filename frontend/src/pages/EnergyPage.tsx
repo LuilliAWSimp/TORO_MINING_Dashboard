@@ -27,7 +27,7 @@ export function EnergyPage() {
           <TimeSeriesChart data={snapshot.trends} series={[{ key: 'power_kw', label: 'Potencia', unit: 'kW', color: '#4E8AA8', type: 'area' }]} height={310} />
         </ChartPanel>
         <ChartPanel title="Energía acumulada" subtitle="Acumulado del día">
-          <TimeSeriesChart data={snapshot.trends} series={[{ key: 'energy_cumulative_kwh', label: 'Energía', unit: 'kWh', color: '#BE9D56', type: 'area' }]} height={310} />
+          <TimeSeriesChart data={snapshot.trends} series={[{ key: 'energy_cumulative_kwh', label: 'Energía', unit: 'kWh', color: '#C9A227', type: 'area' }]} height={310} />
         </ChartPanel>
       </div>
       <section className="panel">
