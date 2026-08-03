@@ -14,7 +14,7 @@ export function LoadingState({ error }: { error?: string | null }) {
     <div className="state-panel">
       <img src="toro-mining-logo.png" alt="TORO MINING" />
       <LoaderCircle className="spin" size={28} />
-      <h2>Preparando Mina San Bernardo</h2>
+      <h2>Preparando Mina San Juan</h2>
       <p>Cargando datos demo locales…</p>
     </div>
   )

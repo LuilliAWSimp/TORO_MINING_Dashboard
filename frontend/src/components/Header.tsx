@@ -30,7 +30,7 @@ export function Header({
       <div className="topbar-brand">
         <img src="toro-mining-logo.png" alt="TORO MINING" />
         <div className="mine-label">
-          <strong>Mina San Bernardo</strong>
+          <strong>Mina San Juan</strong>
           <span>Supervisión operativa local</span>
         </div>
       </div>

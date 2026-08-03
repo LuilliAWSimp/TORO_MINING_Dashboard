@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "TORO MINING - Mina San Bernardo"
+    app_name: str = "TORO MINING - Mina San Juan"
     data_mode: str = "demo"
     host: str = "127.0.0.1"
     port: int = 8000

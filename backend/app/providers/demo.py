@@ -298,7 +298,7 @@ class DemoDataProvider(DataProvider):
         now = self._now()
         info = SCENARIOS[scenario]
         return CatalogResponse(
-            mine="Mina San Bernardo",
+            mine="Mina San Juan",
             scenario=info,
             phase="Fase inicial conceptual" if scenario == DemoScenario.STARTUP else "Operación objetivo conceptual · Mes 36",
             objective_tpd=info.capacity_tpd,
@@ -348,7 +348,7 @@ class DemoDataProvider(DataProvider):
         elif any(item.status == EquipmentStatus.WARNING for item in equipment):
             overall_quality = DataQuality.WARNING
         return DashboardSnapshot(
-            mine="Mina San Bernardo",
+            mine="Mina San Juan",
             scenario=info,
             shift=self._current_shift(now),
             generated_at=now,

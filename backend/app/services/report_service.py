@@ -86,7 +86,7 @@ class NumberedCanvas(canvas.Canvas):
         self.line(15 * mm, 12 * mm, A4[0] - 15 * mm, 12 * mm)
         self.setFont("Helvetica", 8)
         self.setFillColor(LIGHT_GRAPHITE)
-        self.drawString(15 * mm, 7.5 * mm, "TORO MINING · Mina San Bernardo · DATOS DEMO")
+        self.drawString(15 * mm, 7.5 * mm, "TORO MINING · Mina San Juan · DATOS DEMO")
         self.drawRightString(A4[0] - 15 * mm, 7.5 * mm, f"Página {self._pageNumber} de {page_count}")
         self.restoreState()
 
@@ -270,7 +270,7 @@ def generate_operational_report(
         leftMargin=15 * mm,
         topMargin=13 * mm,
         bottomMargin=17 * mm,
-        title="Reporte Operativo TORO MINING - Mina San Bernardo",
+        title="Reporte Operativo TORO MINING - Mina San Juan",
         author="TORO MINING",
         subject="Reporte operativo local con datos demo",
     )
@@ -288,7 +288,7 @@ def generate_operational_report(
         logo.hAlign = "CENTER"
         story.extend([logo, Spacer(1, 1.5 * mm)])
     story.append(Paragraph("Reporte Operativo", styles["ReportTitle"]))
-    story.append(Paragraph("Mina San Bernardo", ParagraphStyle(
+    story.append(Paragraph("Mina San Juan", ParagraphStyle(
         "Mine", parent=styles["Heading2"], alignment=TA_CENTER, textColor=GOLD_DARK,
         fontName="Helvetica-Bold", fontSize=12, leading=14, spaceAfter=3 * mm,
     )))
